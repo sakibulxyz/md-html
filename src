@@ -1,0 +1,85 @@
+#!/bin/bash
+
+path="$HOME/.cache/blog"
+mkdir -p "$path"
+file="$(date +'%s')_$1"
+filep="${path}/${file}"
+
+
+tittle=$(date +'%a-%b-%d')
+
+
+sed '/^$/d' "$1" > "$filep"
+
+htmlBloiler="<!DOCTYPE html>
+<html lang=\"en\">
+	<head>
+    	<meta charset=\"UTF-8\">
+    	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    	<meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\">
+    	<title>${tittle}</title>
+	</head>
+	<body>
+"
+
+[ -z "$1" ] && echo "pls give a file name" && exit
+
+echo "$htmlBloiler"
+
+
+while read line
+do
+	bi="$(echo "$line" | cut -d ' ' -f 1)"
+
+	if [ "$prBi" = "=" ] && [ "$bi" != "=" ]; then
+		echo -e "\t\t</ol>"
+	fi
+	if [ "$prBi" = "-" ] && [ "$bi" != "-" ]; then
+		echo -e "\t\t</ul>"
+	fi
+
+
+	if [ "$bi" = "#" ]; then
+		ln="$( echo "$line" | sed "s/^#\ //")"
+		echo -e "\t\t<h1>$ln</h1>"
+	elif [ "$bi" = "##" ]; then
+		ln="$( echo "$line" | sed "s/^##\ //")"
+		echo -e "\t\t<p>$ln</p>"
+	elif [ "$bi" = "=" ]; then
+
+		if [ "$prBi" != '=' ]; then
+			echo -e "\t\t<ol>"
+		fi
+
+		ln="$( echo "$line" | sed "s/^=\ //")"
+		echo -e "\t\t\t<li>$ln</li>"
+
+	elif [ "$bi" = "-" ]; then
+
+		if [ "$prBi" != '-' ]; then
+			echo -e "\t\t<ul>"
+		fi
+
+		ln="$( echo "$line" | sed "s/^-\ //")"
+		echo -e "\t\t\t<li>$ln</li>"
+	fi
+
+
+
+	prBi="$bi"
+
+done < "$filep"
+
+
+if [ "$prBi" = '=' ]; then
+	echo -e "</ol>"
+fi
+if [ "$prBi" = '-' ]; then
+	echo -e "</ul>"
+fi
+
+
+
+
+echo "	</body>
+</html>"
